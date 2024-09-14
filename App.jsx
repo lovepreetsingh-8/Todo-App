@@ -14,7 +14,10 @@ import {Dimensions, FlatList, SafeAreaView, StatusBar, StyleSheet, Text, TextInp
 function App(){
   const [inputTextValue,setInputTextValue] = useState(null);
   const [list,setList] = useState(null);
+  const [isUpdateData,setIsUpdateData] = useState(false);
+  const [selectedCardIndex,setSelectedCardIndex] = useState(null);
 
+  
   useEffect(()=> {
     getDatabase();
   }, []);
@@ -40,22 +43,53 @@ function App(){
   }
   const handleAddData = async() =>{
     try{
-    const response = await database().ref("todo/").push({
-      value: inputTextValue
-    })
-    console.log(response);
-    setInputTextValue('');
+      if(inputTextValue.length > 0){
+        const response = await database().ref("todo/").push({
+          value: inputTextValue
+        })
+        console.log(response);
+        setInputTextValue('')
+      }else {
+        alert('Please enter some value')
+      }
     
   } catch(err){
     console.log(err);
   }
   }
+
+  const handleUpdateData = async() => {
+    try {
+      if(inputTextValue.length > 0){
+        const response = await database().ref(`todo/${selectedCardIndex}`).update({
+          value: inputTextValue
+        })
+        console.log(response);
+        setInputTextValue('');
+        setIsUpdateData(false);
+      }else {
+        alert('Please enter some value')
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+  const handelCardPress = (cardIndex, cardValue) => {
+    try {
+      setIsUpdateData(true);
+      setSelectedCardIndex(cardIndex);
+      setInputTextValue(cardValue);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+  
   return (
     <View style={styles.container}>
       <StatusBar hidden= {true}/>
       <View>
 
-        <Text style={{textAlign:'center', fontSize: 20, fontWeight: 'bold',}}>
+        <Text style={{textAlign:'center', fontSize: 20, fontWeight: 'bold', color:'#fff'}}>
           TODO App</Text>
 
         <TextInput style={styles.inputBox} 
@@ -63,13 +97,21 @@ function App(){
         value={inputTextValue}
         onChangeText={value => setInputTextValue(value)} />
 
-        <TouchableOpacity style={styles.button} onPress={handleAddData}>
+        {
+          !isUpdateData ? (
+            <TouchableOpacity style={styles.button} onPress={() => handleAddData()}>
           <Text style={{color: '#fff'}}>Add</Text>
         </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.button} onPress={() => handleUpdateData()}>
+          <Text style={{color: '#fff'}}>Update</Text>
+        </TouchableOpacity>
+          )
+        }
       </View>
 
       <View style={styles.cardContainer}>
-        <Text style={{marginVertical:20, fontSize:20, fontWeight: 'bold'}}>
+        <Text style={{marginVertical:20, fontSize:20, fontWeight: 'bold', color: '#fff'}}>
           Todo List
         </Text>
        
@@ -78,10 +120,11 @@ function App(){
           data={list}
           keyExtractor={item => item.id}
           renderItem={({item}) => {
+            const cardIndex = item.id;
             return (
-              <View style={styles.card}>
+              <TouchableOpacity style={styles.card} onPress={()=> handelCardPress(cardIndex,item.value)}>
                 <Text style={{color: '#f5ffff'}}>{item.value}</Text>
-              </View>
+              </TouchableOpacity>
             )
           }}
             
@@ -97,6 +140,7 @@ const styles = StyleSheet.create({
   container:{
     flex: 1,
     alignItems:'center',
+    backgroundColor: "black",
   },
   inputBox:{
     width: width - 30,
@@ -104,6 +148,10 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     marginVertical: 10,
     padding: 10,
+    borderColor: '#fff',
+    backgroundColor: '#fff',
+    color: '#000'
+    
   },
   button:{
   backgroundColor: 'blue',
