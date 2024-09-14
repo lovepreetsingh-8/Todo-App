@@ -7,7 +7,7 @@
 
 import React, { useEffect, useState } from 'react';
 import database, { getDatabase } from '@react-native-firebase/database';
-import {Dimensions, FlatList, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
+import {Alert, Dimensions, FlatList, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
 
 
 
@@ -74,6 +74,7 @@ function App(){
       console.log(err);
     }
   }
+
   const handelCardPress = (cardIndex, cardValue) => {
     try {
       setIsUpdateData(true);
@@ -84,6 +85,33 @@ function App(){
     }
   }
   
+  const handelCardLongPress = (cardIndex, cardValue) => {
+    try {
+      Alert.alert("Alert",`You want to delete ${cardValue}?`,[
+        {
+          text: 'Yeah',
+          onPress: async () => {
+            try {
+              const response = await database().ref(`todo/${cardIndex}`).remove();
+              console.log(response);
+              
+              setInputTextValue('');
+              setIsUpdateData(false);
+            } catch (err) {
+              console.log(err)
+            }
+            
+          }},
+          {
+            text: 'Cancel',
+          }
+      ]);
+      
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar hidden= {true}/>
@@ -122,7 +150,10 @@ function App(){
           renderItem={({item}) => {
             const cardIndex = item.id;
             return (
-              <TouchableOpacity style={styles.card} onPress={()=> handelCardPress(cardIndex,item.value)}>
+              <TouchableOpacity 
+              style={styles.card} 
+              onPress={()=> handelCardPress(cardIndex,item.value)}
+              onLongPress={() => handelCardLongPress(cardIndex,item.value)}>
                 <Text style={{color: '#f5ffff'}}>{item.value}</Text>
               </TouchableOpacity>
             )
